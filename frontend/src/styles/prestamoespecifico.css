@@ -1,0 +1,28 @@
+.formulario-container {
+  display: flex;
+  flex-wrap: wrap; /* Permite que se apilen en pantallas pequeñas */
+  gap: 20px; /* Espacio entre columnas */
+  padding: 20px;
+}
+
+.formulario {
+  flex: 1;
+  min-width: 300px; /* Ancho mínimo para pantallas pequeñas */
+}
+
+.resultado-container {
+  flex: 1;
+  min-width: 300px;
+}
+
+.resultado {
+  background-color: #f8f9fa; /* Fondo claro para destacar */
+  margin-top: 0; /* Elimina el margen superior para alinear con el formulario */
+}
+
+/* Ajustes para pantallas pequeñas */
+@media (max-width: 768px) {
+  .formulario-container {
+    flex-direction: column;
+  }
+}
