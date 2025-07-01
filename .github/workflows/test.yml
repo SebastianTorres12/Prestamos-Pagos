@@ -23,7 +23,9 @@ jobs:
           TZ: America/Guayaquil
         ports:
           - 3306:3306
-        options: --health-cmd "mysqladmin ping -h localhost -u root --password=sebastian || exit 0" --health-interval 10s --health-timeout 5s --health-retries 10 --health-start-period 30s
+        volumes:
+          - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+        options: --health-cmd "mysqladmin ping -h localhost -u root --password=sebastian" --health-interval 10s --health-timeout 5s --health-retries 10 --health-start-period 30s
 
       # Servicio Backend para pruebas
       backend:
@@ -34,6 +36,8 @@ jobs:
           DB_PASSWORD: sebastian
           MAIL_USERNAME: ${{ secrets.MAIL_USERNAME }}
           MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}
+          SPRING_ACTUATOR_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health
+          SPRING_ACTUATOR_ENDPOINT_HEALTH_SHOW_DETAILS: always
         ports:
           - 8080:8080
 
@@ -60,7 +64,7 @@ jobs:
 
       # Instalar herramientas necesarias
       - name: Instalar herramientas
-        run: sudo apt-get update && sudo apt-get install -y mysql-client netcat-openbsd
+        run: sudo apt-get update && sudo apt-get install -y mysql-client netcat-openbsd curl
 
       # Capturar logs de MySQL si falla el healthcheck
       - name: Capturar logs de MySQL si falla
@@ -100,11 +104,13 @@ jobs:
             docker logs $(docker ps -a -q --filter "ancestor=mysql:8.0.36") 2>&1
           done' || { echo "Error: No se pudo conectar a MySQL"; exit 1; }
           # Verificar que el backend está respondiendo
-          timeout 30s bash -c 'until curl -s http://backend:8080/actuator/health | grep -q '"status":"UP"'; do
+          timeout 60s bash -c 'until curl -s -v http://backend:8080/actuator/health 2>&1 | grep -q '"status":"UP"'; do
             echo "Esperando a que el backend esté listo..."
+            curl -s -v http://backend:8080/actuator/health 2>&1 || echo "Curl falló"
             sleep 5
+            docker ps -a
             docker logs $(docker ps -a -q --filter "ancestor=sebast25/gestion-prestamos-backend:latest") 2>&1
-          done' || { echo "Error: Backend no se inició en 30 segundos"; exit 1; }
+          done' || { echo "Error: Backend no se inició en 60 segundos"; exit 1; }
           # Verificar que el frontend está respondiendo
           timeout 30s bash -c 'until curl -s http://frontend:80 | grep -q "<!DOCTYPE html>"; do
             echo "Esperando a que el frontend esté listo..."
