@@ -40,16 +40,12 @@ jobs:
           MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}
         ports:
           - 8080:8080
-        depends_on:
-          - mysql
 
       # Servicio Frontend para pruebas
       frontend:
         image: sebast25/gestion-prestamos-frontend:latest
         ports:
           - 80:80
-        depends_on:
-          - backend
 
     steps:
       # Clonar el repositorio
@@ -65,6 +61,25 @@ jobs:
       # Instalar dependencias
       - name: Instalar Dependencias
         run: npm install selenium-webdriver geckodriver
+
+      # Esperar a que los servicios estén listos
+      - name: Esperar a que los servicios estén listos
+        run: |
+          # Esperar a que MySQL esté listo
+          until mysqladmin ping -h mysql -P 3306 -u root -psebastian --silent; do
+            echo "Esperando a que MySQL esté listo..."
+            sleep 5
+          done
+          # Verificar que el backend está respondiendo
+          until curl -s http://backend:8080/actuator/health | grep -q '"status":"UP"'; do
+            echo "Esperando a que el backend esté listo..."
+            sleep 5
+          done
+          # Verificar que el frontend está respondiendo
+          until curl -s http://frontend:80 | grep -q "<!DOCTYPE html>"; do
+            echo "Esperando a que el frontend esté listo..."
+            sleep 5
+          done
 
       # Ejecutar todas las pruebas Selenium
       - name: Ejecutar Pruebas Selenium
