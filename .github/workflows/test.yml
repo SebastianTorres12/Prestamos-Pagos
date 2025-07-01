@@ -16,7 +16,7 @@ jobs:
     services:
       # Servicio MySQL para pruebas
       mysql:
-        image: mysql:8.0
+        image: mysql:8.0.36
         env:
           MYSQL_ROOT_PASSWORD: sebastian
           MYSQL_DATABASE: gestion_prestamos
@@ -57,27 +57,31 @@ jobs:
       - name: Instalar Dependencias
         run: npm install selenium-webdriver geckodriver
 
-      # Instalar mysqladmin
+      # Instalar cliente MySQL
       - name: Instalar cliente MySQL
         run: sudo apt-get update && sudo apt-get install -y mysql-client
 
       # Esperar a que los servicios estén listos
       - name: Esperar a que los servicios estén listos
         run: |
-          # Esperar a que MySQL esté listo (máximo 60 segundos)
-          timeout 60s bash -c 'until mysqladmin ping -h mysql -P 3306 -u root -psebastian --silent; do
+          # Esperar a que MySQL esté listo (máximo 120 segundos)
+          timeout 120s bash -c 'until mysqladmin ping -h mysql -P 3306 -u root -psebastian --silent; do
             echo "Esperando a que MySQL esté listo..."
             sleep 5
-          done' || { echo "Error: MySQL no se inició en 60 segundos"; exit 1; }
+            docker ps -a
+            docker logs $(docker ps -a -q --filter "ancestor=mysql:8.0.36") 2>&1
+          done' || { echo "Error: MySQL no se inició en 120 segundos"; exit 1; }
           # Verificar que el backend está respondiendo
           timeout 30s bash -c 'until curl -s http://backend:8080/actuator/health | grep -q '"status":"UP"'; do
             echo "Esperando a que el backend esté listo..."
             sleep 5
+            docker logs $(docker ps -a -q --filter "ancestor=sebast25/gestion-prestamos-backend:latest") 2>&1
           done' || { echo "Error: Backend no se inició en 30 segundos"; exit 1; }
           # Verificar que el frontend está respondiendo
           timeout 30s bash -c 'until curl -s http://frontend:80 | grep -q "<!DOCTYPE html>"; do
             echo "Esperando a que el frontend esté listo..."
             sleep 5
+            docker logs $(docker ps -a -q --filter "ancestor=sebast25/gestion-prestamos-frontend:latest") 2>&1
           done' || { echo "Error: Frontend no se inició en 30 segundos"; exit 1; }
 
       # Ejecutar todas las pruebas Selenium
