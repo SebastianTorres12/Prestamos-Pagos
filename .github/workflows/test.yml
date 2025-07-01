@@ -23,11 +23,6 @@ jobs:
           TZ: America/Guayaquil
         ports:
           - 3306:3306
-        options: >-
-          --health-cmd="mysqladmin ping --silent"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=3
 
       # Servicio Backend para pruebas
       backend:
@@ -62,24 +57,28 @@ jobs:
       - name: Instalar Dependencias
         run: npm install selenium-webdriver geckodriver
 
+      # Instalar mysqladmin
+      - name: Instalar cliente MySQL
+        run: sudo apt-get update && sudo apt-get install -y mysql-client
+
       # Esperar a que los servicios estén listos
       - name: Esperar a que los servicios estén listos
         run: |
-          # Esperar a que MySQL esté listo
-          until mysqladmin ping -h mysql -P 3306 -u root -psebastian --silent; do
+          # Esperar a que MySQL esté listo (máximo 60 segundos)
+          timeout 60s bash -c 'until mysqladmin ping -h mysql -P 3306 -u root -psebastian --silent; do
             echo "Esperando a que MySQL esté listo..."
             sleep 5
-          done
+          done' || { echo "Error: MySQL no se inició en 60 segundos"; exit 1; }
           # Verificar que el backend está respondiendo
-          until curl -s http://backend:8080/actuator/health | grep -q '"status":"UP"'; do
+          timeout 30s bash -c 'until curl -s http://backend:8080/actuator/health | grep -q '"status":"UP"'; do
             echo "Esperando a que el backend esté listo..."
             sleep 5
-          done
+          done' || { echo "Error: Backend no se inició en 30 segundos"; exit 1; }
           # Verificar que el frontend está respondiendo
-          until curl -s http://frontend:80 | grep -q "<!DOCTYPE html>"; do
+          timeout 30s bash -c 'until curl -s http://frontend:80 | grep -q "<!DOCTYPE html>"; do
             echo "Esperando a que el frontend esté listo..."
             sleep 5
-          done
+          done' || { echo "Error: Frontend no se inició en 30 segundos"; exit 1; }
 
       # Ejecutar todas las pruebas Selenium
       - name: Ejecutar Pruebas Selenium
