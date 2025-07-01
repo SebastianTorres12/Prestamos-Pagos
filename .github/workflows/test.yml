@@ -64,13 +64,13 @@ jobs:
       # Esperar a que los servicios estén listos
       - name: Esperar a que los servicios estén listos
         run: |
-          # Esperar a que MySQL esté listo (máximo 120 segundos)
-          timeout 120s bash -c 'until mysqladmin ping -h mysql -P 3306 -u root -psebastian --silent; do
+          # Esperar a que MySQL esté listo (máximo 180 segundos)
+          timeout 180s bash -c 'until mysql -h mysql -P 3306 -u root -p"sebastian" -e "SELECT 1" >/dev/null 2>&1; do
             echo "Esperando a que MySQL esté listo..."
             sleep 5
             docker ps -a
             docker logs $(docker ps -a -q --filter "ancestor=mysql:8.0.36") 2>&1
-          done' || { echo "Error: MySQL no se inició en 120 segundos"; exit 1; }
+          done' || { echo "Error: MySQL no se inició en 180 segundos"; exit 1; }
           # Verificar que el backend está respondiendo
           timeout 30s bash -c 'until curl -s http://backend:8080/actuator/health | grep -q '"status":"UP"'; do
             echo "Esperando a que el backend esté listo..."
