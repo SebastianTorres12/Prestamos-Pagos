@@ -73,7 +73,7 @@ jobs:
           echo "Intentando conectar sin contraseña..."
           mysql -h 127.0.0.1 -P 3306 -u root -e "SELECT User, Host, authentication_string FROM mysql.user" || echo "Conexión sin contraseña fallida"
           echo "Intentando conectar con contraseña 'sebastian'..."
-          mysql -h 127.0.0.1 -P 3306 -u root -p"sebastian" -e "SELECT User, Host, authentication_string FROM mysql.user" || echo "Conexión con contraseña fallida"
+          mysql -h 127.0.0.1 -P 3306 -u root -p sebastian -e "SELECT User, Host, authentication_string FROM mysql.user" || echo "Conexión con contraseña fallida"
 
       # Esperar a que los servicios estén listos
       - name: Esperar a que los servicios estén listos
@@ -86,7 +86,7 @@ jobs:
             docker logs $(docker ps -a -q --filter "ancestor=mysql:8.0.36") 2>&1
           done' || { echo "Error: MySQL no se inició en 180 segundos"; exit 1; }
           # Verificar conexión a MySQL
-          timeout 30s bash -c 'until mysql -h 127.0.0.1 -P 3306 -u root -e "SELECT 1" >/dev/null 2>&1 || mysql -h 127.0.0.1 -P 3306 -u root -p "sebastian" -e "SELECT 1" >/dev/null 2>&1; do
+          timeout 30s bash -c 'until mysql -h 127.0.0.1 -P 3306 -u root -e "SELECT 1" >/dev/null 2>&1 || mysql -h 127.0.0.1 -P 3306 -u root -p sebastian -e "SELECT 1" >/dev/null 2>&1; do
             echo "Verificando conexión a MySQL..."
             sleep 5
           done' || { echo "Error: No se pudo conectar a MySQL"; exit 1; }
