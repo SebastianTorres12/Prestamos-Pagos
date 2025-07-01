@@ -1,4 +1,4 @@
-name: Pruebas Selenium para Gestión de Préstamos y Pagos
+name: Pruebas Unitarias para Gestión de Préstamos y Pagos
 
 on:
   push:
@@ -10,39 +10,8 @@ on:
 
 jobs:
   test:
-    name: Ejecutar Pruebas Selenium
+    name: Ejecutar Pruebas Unitarias
     runs-on: ubuntu-latest
-
-    services:
-      mysql:
-        image: mysql:8.0.36
-        env:
-          MYSQL_ROOT_PASSWORD: sebastian
-          MYSQL_DATABASE: gestion_prestamos
-          TZ: America/Guayaquil
-        ports:
-          - 3306:3306
-        volumes:
-          - ./init.sql:/docker-entrypoint-initdb.d/init.sql
-        options: --health-cmd "mysqladmin ping -h localhost -u root --password=sebastian" --health-interval 10s --health-timeout 5s --health-retries 10 --health-start-period 30s
-
-      backend:
-        image: sebast25/gestion-prestamos-backend:latest
-        env:
-          DB_HOST: mysql
-          DB_USERNAME: root
-          DB_PASSWORD: sebastian
-          MAIL_USERNAME: ${{ secrets.MAIL_USERNAME }}
-          MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}
-          SPRING_ACTUATOR_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health
-          SPRING_ACTUATOR_ENDPOINT_HEALTH_SHOW_DETAILS: always
-        ports:
-          - 8080:8080
-
-      frontend:
-        image: sebast25/gestion-prestamos-frontend:latest
-        ports:
-          - 80:80
 
     steps:
       - name: Clonar Repositorio
@@ -52,65 +21,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-
-      - name: Instalar Dependencias
-        run: npm install selenium-webdriver geckodriver
-
-      - name: Instalar herramientas
-        run: sudo apt-get update && sudo apt-get install -y mysql-client netcat-openbsd curl
-
-      - name: Capturar logs de MySQL si falla
-        if: failure()
-        run: |
-          echo "Capturando logs de MySQL..."
-          docker ps -a
-          docker logs $(docker ps -a -q --filter "ancestor=mysql:8.0.36") 2>&1
-
-      - name: Inspeccionar usuarios de MySQL
-        run: |
-          echo "Esperando a que MySQL esté listo para inspeccionar usuarios..."
-          timeout 60s bash -c 'until nc -z 127.0.0.1 3306 >/dev/null 2>&1; do
-            echo "Esperando puerto 3306..."
-            sleep 5
-            docker ps -a
-            docker logs $(docker ps -a -q --filter "ancestor=mysql:8.0.36") 2>&1
-          done' || { echo "Advertencia: Puerto 3306 no disponible, continuando..."; }
-          if nc -z 127.0.0.1 3306; then
-            echo "Intentando conectar con contraseña 'sebastian'..."
-            mysql -h 127.0.0.1 -P 3306 -u root -psebastian -e "SELECT User, Host, authentication_string FROM mysql.user" || { echo "Conexión con contraseña fallida"; }
-          fi
-
-      - name: Esperar a que los servicios estén listos
-        run: |
-          # Esperar a que MySQL esté listo (máximo 180 segundos)
-          timeout 180s bash -c 'until nc -z 127.0.0.1 3306 >/dev/null 2>&1; do
-            echo "Esperando a que MySQL esté listo..."
-            sleep 5
-            docker ps -a
-            docker logs $(docker ps -a -q --filter "ancestor=mysql:8.0.36") 2>&1
-          done' || { echo "Advertencia: MySQL no se inició en 180 segundos, continuando..."; }
-          # Verificar conexión a MySQL
-          if nc -z 127.0.0.1 3306; then
-            timeout 60s bash -c 'until mysqladmin ping -h 127.0.0.1 -P 3306 -u root --password=sebastian >/dev/null 2>&1; do
-              echo "Verificando conexión a MySQL..."
-              sleep 5
-              docker logs $(docker ps -a -q --filter "ancestor=mysql:8.0.36") 2>&1
-            done' || { echo "Advertencia: No se pudo conectar a MySQL, continuando..."; }
-          fi
-          # Verificar que el backend está respondiendo
-          timeout 60s bash -c 'until curl -s -v http://backend:8080/actuator/health 2>&1 | grep -q '"status":"UP"'; do
-            echo "Esperando a que el backend esté listo..."
-            curl -s -v http://backend:8080/actuator/health 2>&1 || echo "Curl falló"
-            sleep 5
-            docker ps -a
-            docker logs $(docker ps -a -q --filter "ancestor=sebast25/gestion-prestamos-backend:latest") 2>&1
-          done' || { echo "Error: Backend no se inició en 60 segundos"; exit 1; }
-          # Verificar que el frontend está respondiendo
-          timeout 30s bash -c 'until curl -s http://frontend:80 | grep -q "<!DOCTYPE html>"; do
-            echo "Esperando a que el frontend esté listo..."
-            sleep 5
-            docker logs $(docker ps -a -q --filter "ancestor=sebast25/gestion-prestamos-frontend:latest") 2>&1
-          done' || { echo "Error: Frontend no se inició en 30 segundos"; exit 1; }
 
       - name: Instalar Jest
         run: npm install --save-dev jest
