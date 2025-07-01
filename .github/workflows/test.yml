@@ -61,25 +61,18 @@ jobs:
       - name: Instalar herramientas
         run: sudo apt-get update && sudo apt-get install -y mysql-client netcat-openbsd
 
-      # Verificar resolución del host mysql
-      - name: Verificar resolución de host
-        run: |
-          echo "Resolviendo host mysql..."
-          ping -c 3 mysql || { echo "Error: No se pudo resolver el host mysql"; exit 1; }
-          echo "Host mysql resuelto correctamente"
-
       # Esperar a que los servicios estén listos
       - name: Esperar a que los servicios estén listos
         run: |
           # Esperar a que MySQL esté listo (máximo 180 segundos)
-          timeout 180s bash -c 'until nc -z mysql 3306 >/dev/null 2>&1; do
+          timeout 180s bash -c 'until nc -z 127.0.0.1 3306 >/dev/null 2>&1; do
             echo "Esperando a que MySQL esté listo..."
             sleep 5
             docker ps -a
             docker logs $(docker ps -a -q --filter "ancestor=mysql:8.0.36") 2>&1
           done' || { echo "Error: MySQL no se inició en 180 segundos"; exit 1; }
           # Verificar conexión a MySQL
-          timeout 30s bash -c 'until mysql -h mysql -P 3306 -u root -p "sebastian" -e "SELECT 1" >/dev/null 2>&1; do
+          timeout 30s bash -c 'until mysql -h 127.0.0.1 -P 3306 -u root -p "sebastian" -e "SELECT 1" >/dev/null 2>&1; do
             echo "Verificando conexión a MySQL..."
             sleep 5
           done' || { echo "Error: No se pudo conectar a MySQL"; exit 1; }
