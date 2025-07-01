@@ -23,7 +23,7 @@ jobs:
           TZ: America/Guayaquil
         ports:
           - 3306:3306
-        options: --health-cmd "mysqladmin ping -h localhost -u root --password=sebastian" --health-interval 10s --health-timeout 5s --health-retries 5
+        options: --health-cmd "mysqladmin ping -h localhost -u root --password=sebastian || exit 0" --health-interval 10s --health-timeout 5s --health-retries 10 --health-start-period 30s
 
       # Servicio Backend para pruebas
       backend:
@@ -62,6 +62,14 @@ jobs:
       - name: Instalar herramientas
         run: sudo apt-get update && sudo apt-get install -y mysql-client netcat-openbsd
 
+      # Capturar logs de MySQL si falla el healthcheck
+      - name: Capturar logs de MySQL si falla
+        if: failure()
+        run: |
+          echo "Capturando logs de MySQL..."
+          docker ps -a
+          docker logs $(docker ps -a -q --filter "ancestor=mysql:8.0.36") 2>&1
+
       # Inspeccionar usuarios de MySQL
       - name: Inspeccionar usuarios de MySQL
         run: |
@@ -69,6 +77,8 @@ jobs:
           timeout 60s bash -c 'until nc -z 127.0.0.1 3306 >/dev/null 2>&1; do
             echo "Esperando puerto 3306..."
             sleep 5
+            docker ps -a
+            docker logs $(docker ps -a -q --filter "ancestor=mysql:8.0.36") 2>&1
           done' || { echo "Error: Puerto 3306 no disponible"; exit 1; }
           echo "Intentando conectar con contraseña 'sebastian'..."
           mysql -h 127.0.0.1 -P 3306 -u root -psebastian -e "SELECT User, Host, authentication_string FROM mysql.user" || { echo "Conexión con contraseña fallida"; exit 1; }
@@ -84,9 +94,10 @@ jobs:
             docker logs $(docker ps -a -q --filter "ancestor=mysql:8.0.36") 2>&1
           done' || { echo "Error: MySQL no se inició en 180 segundos"; exit 1; }
           # Verificar conexión a MySQL
-          timeout 30s bash -c 'until mysqladmin ping -h 127.0.0.1 -P 3306 -u root --password=sebastian >/dev/null 2>&1; do
+          timeout 60s bash -c 'until mysqladmin ping -h 127.0.0.1 -P 3306 -u root --password=sebastian >/dev/null 2>&1; do
             echo "Verificando conexión a MySQL..."
             sleep 5
+            docker logs $(docker ps -a -q --filter "ancestor=mysql:8.0.36") 2>&1
           done' || { echo "Error: No se pudo conectar a MySQL"; exit 1; }
           # Verificar que el backend está respondiendo
           timeout 30s bash -c 'until curl -s http://backend:8080/actuator/health | grep -q '"status":"UP"'; do
