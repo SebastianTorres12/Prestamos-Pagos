@@ -1,1 +1,0 @@
-echo -e "SET PASSWORD FOR 'root'@'localhost' = 'sebastian';\nCREATE USER IF NOT EXISTS 'root'@'%' IDENTIFIED BY 'sebastian';\nGRANT ALL PRIVILEGES ON *.* TO 'root'@'%' WITH GRANT OPTION;\nFLUSH PRIVILEGES;" > init.sql

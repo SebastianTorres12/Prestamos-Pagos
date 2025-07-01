@@ -112,11 +112,8 @@ jobs:
             docker logs $(docker ps -a -q --filter "ancestor=sebast25/gestion-prestamos-frontend:latest") 2>&1
           done' || { echo "Error: Frontend no se inició en 30 segundos"; exit 1; }
 
-      - name: Ejecutar Pruebas Selenium
-        run: |
-          for test_file in pruebas_selenium/*.js; do
-            echo "Ejecutando $test_file"
-            node "$test_file"
-          done
-        env:
-          BASE_URL: http://frontend:80
+      - name: Instalar Jest
+        run: npm install --save-dev jest
+
+      - name: Ejecutar Pruebas Unitarias
+        run: npx jest escenarios.unit.test.js
