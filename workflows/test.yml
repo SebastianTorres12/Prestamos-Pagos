@@ -1,0 +1,77 @@
+name: Pruebas Selenium para Gestión de Préstamos y Pagos
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    name: Ejecutar Pruebas Selenium
+    runs-on: ubuntu-latest
+
+    services:
+      # Servicio MySQL para pruebas
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: sebastian
+          MYSQL_DATABASE: gestion_prestamos
+          TZ: America/Guayaquil
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+
+      # Servicio Backend para pruebas
+      backend:
+        image: sebast25/gestion-prestamos-backend:latest
+        env:
+          DB_HOST: mysql
+          DB_USERNAME: root
+          DB_PASSWORD: sebastian
+          MAIL_USERNAME: ${{ secrets.MAIL_USERNAME }}
+          MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}
+        ports:
+          - 8080:8080
+        depends_on:
+          - mysql
+
+      # Servicio Frontend para pruebas
+      frontend:
+        image: sebast25/gestion-prestamos-frontend:latest
+        ports:
+          - 80:80
+        depends_on:
+          - backend
+
+    steps:
+      # Clonar el repositorio
+      - name: Clonar Repositorio
+        uses: actions/checkout@v4
+
+      # Configurar Node.js
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # Instalar dependencias
+      - name: Instalar Dependencias
+        run: npm install selenium-webdriver geckodriver
+
+      # Ejecutar todas las pruebas Selenium
+      - name: Ejecutar Pruebas Selenium
+        run: |
+          for test_file in pruebas_selenium/*.js; do
+            echo "Ejecutando $test_file"
+            node "$test_file"
+          done
+        env:
+          BASE_URL: http://frontend:80
