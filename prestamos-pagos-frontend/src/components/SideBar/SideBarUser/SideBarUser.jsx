@@ -5,25 +5,6 @@ import "../../../styles/sideBar.css"; // Importamos los estilos
 const SideBarUser = () => {
   const navigate = useNavigate();
 
-  // 🔹 Función para obtener el nombre y apellido desde el token
-  const getUserName = () => {
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) return "Usuario"; // Fallback si no hay token
-
-      // Decodificar el payload del JWT
-      const payloadBase64 = token.split(".")[1]; // Obtener la parte del payload
-      const decodedPayload = atob(payloadBase64); // Decodificar de base64
-      const payload = JSON.parse(decodedPayload); // Convertir a objeto JSON
-
-      // Retornar nombre completo
-      return `${payload.nombre} ${payload.apellido}`;
-    } catch (error) {
-      console.error("Error decoding token:", error);
-      return "Usuario"; // Fallback en caso de error
-    }
-  };
-
   // 🔹 Función para cerrar sesión
   const handleLogout = () => {
     localStorage.removeItem("token"); // Eliminar token de autenticación
@@ -34,7 +15,7 @@ const SideBarUser = () => {
     <div className="sidebar">
       <div className="sidebar-header">
         <h2>ESPECITO</h2>
-        <p className="role">{getUserName()}</p>
+        <p className="role">Usuario</p>
         <span className="text-muted">Solicitud de préstamo</span>
       </div>
 

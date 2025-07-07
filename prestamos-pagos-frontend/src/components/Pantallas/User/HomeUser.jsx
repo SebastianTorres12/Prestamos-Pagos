@@ -126,7 +126,6 @@ const HomeUser = () => {
         </p>
         <button
           className="btn btn-success btn-sm"
-          id="btnSolicitarPrestamo"
           onClick={validarPrestamoActivo}
           disabled={loading}
         >

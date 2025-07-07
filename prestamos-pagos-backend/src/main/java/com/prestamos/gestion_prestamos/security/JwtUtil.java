@@ -32,19 +32,9 @@ public class JwtUtil {
                 .compact();
     }
 
-    // Extraer correo
-    public String extraerCorreo(String token) {
-        return extraerReclamo(token, Claims::getSubject);
-    }
-
     // Extraer ID de usuario
     public Long extraerIdUsuario(String token) {
         return extraerReclamo(token, claims -> claims.get("idUsuario", Long.class));
-    }
-
-    // Extraer nombre
-    public String extraerNombre(String token) {
-        return extraerReclamo(token, claims -> claims.get("nombre", String.class));
     }
 
     // Extraer apellido
@@ -52,20 +42,31 @@ public class JwtUtil {
         return extraerReclamo(token, claims -> claims.get("apellido", String.class));
     }
 
+    // Extraer correo
+    public String extraerCorreo(String token) {
+        return extraerReclamo(token, Claims::getSubject);
+    }
+
+    // Extraer nombre
+    public String extraerNombre(String token) {
+        return extraerReclamo(token, claims -> claims.get("nombre", String.class));
+    }
+
     // Extraer rol
     public String extraerRol(String token) {
         return extraerReclamo(token, claims -> claims.get("rol", String.class));
     }
-
-    // Extraer cédula
-    public String extraerCedula(String token) {
-        return extraerReclamo(token, claims -> claims.get("cedula", String.class));
-    }
-
+   
     // Validar Token
     public boolean validarToken(String token, String correo) {
         return correo.equals(extraerCorreo(token)) && !tokenExpirado(token);
     }
+
+     // Extraer cédula
+    public String extraerCedula(String token) {
+        return extraerReclamo(token, claims -> claims.get("cedula", String.class));
+    }
+
 
     // Verificar si el token ha expirado
     private boolean tokenExpirado(String token) {

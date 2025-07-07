@@ -121,7 +121,6 @@ const Login = ({ setIsAuthenticated }) => {
                 <input
                   type="email"
                   className="form-control"
-                  id="correo" // Agregamos el id aquí
                   value={correo}
                   onChange={(e) => setCorreo(e.target.value)}
                   required
@@ -135,7 +134,6 @@ const Login = ({ setIsAuthenticated }) => {
                   <input
                     type={showPassword ? "text" : "password"}
                     className="form-control"
-                    id="contrasena" // Agregamos el id aquí
                     value={contrasena}
                     onChange={(e) => setContrasena(e.target.value)}
                     required
@@ -145,7 +143,6 @@ const Login = ({ setIsAuthenticated }) => {
                   <button
                     type="button"
                     className="btn btn-outline-secondary"
-                    id="iniciar-sesion-submit-btn" // Agregamos el id aquí
                     onClick={togglePasswordVisibility}
                     style={{ borderLeft: "none" }}
                   >

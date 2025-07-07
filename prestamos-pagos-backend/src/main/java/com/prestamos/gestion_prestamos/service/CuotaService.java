@@ -43,6 +43,17 @@ public class CuotaService {
     }
 
     /**
+     * Obtener todas las cuotas con sus datos completos, incluyendo el idPrestamo.
+     */
+    public List<Cuota> obtenerTodasLasCuotas() {
+        String usuarioAutenticado = getUsuarioAutenticado();
+        List<Cuota> cuotas = cuotaRepository.findAllWithPrestamo();
+        ActionLogger.logAction(usuarioAutenticado != null ? usuarioAutenticado : "Sistema",
+                "Consultó todas las cuotas registradas");
+        return cuotas;
+    }
+
+    /**
      * Registrar el pago de una cuota.
      * - Si es la última cuota pendiente, cambia el estado del préstamo a "FINALIZADO".
      * - Se reduce el monto pendiente del préstamo.
@@ -122,14 +133,5 @@ public class CuotaService {
         }
     }
 
-    /**
-     * Obtener todas las cuotas con sus datos completos, incluyendo el idPrestamo.
-     */
-    public List<Cuota> obtenerTodasLasCuotas() {
-        String usuarioAutenticado = getUsuarioAutenticado();
-        List<Cuota> cuotas = cuotaRepository.findAllWithPrestamo();
-        ActionLogger.logAction(usuarioAutenticado != null ? usuarioAutenticado : "Sistema",
-                "Consultó todas las cuotas registradas");
-        return cuotas;
-    }
+    
 }

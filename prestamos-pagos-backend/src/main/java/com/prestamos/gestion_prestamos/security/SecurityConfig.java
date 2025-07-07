@@ -34,7 +34,9 @@ public class SecurityConfig {
                 .and()
                 .csrf(csrf -> csrf.disable()) // ❌ Deshabilitar CSRF solo si no usas formularios
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/usuarios/registro",
+                        .requestMatchers(
+                                "/actuator/prometheus", // 👈 Permitir Prometheus sin auth
+                                "/api/usuarios/registro",
                                 "/api/usuarios/login",
                                 "/api/usuarios/solicitar-recuperacion",
                                 "/api/usuarios/restablecer-contrasena",
@@ -56,15 +58,17 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
-        return authenticationConfiguration.getAuthenticationManager();
-    }
-
-    @Bean
     public DaoAuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
         authProvider.setUserDetailsService(customUserDetailsService);
         authProvider.setPasswordEncoder(passwordEncoder());
         return authProvider;
     }
+
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
+        return authenticationConfiguration.getAuthenticationManager();
+    }
+
+    
 }

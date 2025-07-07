@@ -52,8 +52,8 @@ public class Prestamo {
     @Column(updatable = false)
     private LocalDateTime fechaSolicitud; // Fecha en la que se solicita el préstamo
 
-    @Column(nullable = true)
-    private LocalDate fechaAprobacion; // Fecha de aprobación, inicialmente nula
+    private LocalDate fechaAprobacion;
+
 
     public LocalDate getFechaAprobacion() {
         return fechaAprobacion;
@@ -142,4 +142,5 @@ public class Prestamo {
     public void setFechaSolicitud(LocalDateTime fechaSolicitud) {
         this.fechaSolicitud = fechaSolicitud;
     }
+
 }

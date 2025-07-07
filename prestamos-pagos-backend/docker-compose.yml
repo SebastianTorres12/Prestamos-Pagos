@@ -2,7 +2,9 @@ version: '3.8'
 
 services:
   backend:
-    image: sebast25/gestion-prestamos-backend:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
     ports:
       - "8080:8080"
     environment:
@@ -12,7 +14,8 @@ services:
       - MAIL_USERNAME=cristhophervillamarin7@gmail.com
       - MAIL_PASSWORD=ayvq peua syeq aesn
     depends_on:
-      - mysql
+      mysql:
+        condition: service_healthy
     networks:
       - app-network
 
@@ -21,13 +24,17 @@ services:
     environment:
       - MYSQL_ROOT_PASSWORD=sebastian
       - MYSQL_DATABASE=gestion_prestamos
-      - TZ=America/Guayaquil # Añade esta línea para establecer la zona horaria
     ports:
       - "3306:3306"
     volumes:
       - mysql-data:/var/lib/mysql
     networks:
       - app-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   frontend:
     image: sebast25/gestion-prestamos-frontend:latest
@@ -37,6 +44,24 @@ services:
       - backend
     networks:
       - app-network
+
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    networks:
+      - app-network
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    networks:
+      - app-network
+    depends_on:
+      - prometheus
 
 networks:
   app-network:

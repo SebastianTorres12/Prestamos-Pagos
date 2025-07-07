@@ -79,6 +79,17 @@ public class Cuota {
     }
 
     /**
+     * Método para verificar si la cuota está en mora y actualizar el interés por mora.
+     */
+    public void verificarMora() {
+        if ("Pendiente".equals(this.estado) && LocalDate.now().isAfter(this.fechaVencimiento)) {
+            this.estado = "Mora";
+            actualizarInteresMora();
+        }
+    }
+
+
+    /**
      * Método para marcar la cuota como pagada.
      */
     public void marcarComoPagada() {
@@ -90,16 +101,7 @@ public class Cuota {
         this.interesMora = 0.0; // Se elimina el interés por mora al pagar
     }
 
-    /**
-     * Método para verificar si la cuota está en mora y actualizar el interés por mora.
-     */
-    public void verificarMora() {
-        if ("Pendiente".equals(this.estado) && LocalDate.now().isAfter(this.fechaVencimiento)) {
-            this.estado = "Mora";
-            actualizarInteresMora();
-        }
-    }
-
+    
     /**
      * Método para calcular el interés por mora basado en los días de retraso.
      */

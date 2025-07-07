@@ -38,7 +38,7 @@ const Principal = () => {
           {/* Botones */}
           <div className="d-flex gap-3 mt-4">
             <Link to="/auth/login">
-              <button className="btn btn-lg px-5" id="iniciar-sesion-btn" style={{ backgroundColor: "#107a54", color: "white", fontWeight: "bold" }}>
+              <button className="btn btn-lg px-5" style={{ backgroundColor: "#107a54", color: "white", fontWeight: "bold" }}>
                 Iniciar Sesión
               </button>
             </Link>

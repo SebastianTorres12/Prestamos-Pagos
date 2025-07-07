@@ -6,8 +6,8 @@ const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:8080/api
 // Define base URLs para cada recurso
 const BASE_URLS = {
   USUARIOS: `${API_BASE_URL}/usuarios`,
-  PRESTAMOS: `${API_BASE_URL}/prestamos`,
   CUOTAS: `${API_BASE_URL}/cuotas`,
+  PRESTAMOS: `${API_BASE_URL}/prestamos`,
   LOGS: `${API_BASE_URL}/logs`
 };
 
